@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { api, Destination, TransportRoute } from "@/src/api";
+import { api, Destination } from "@/src/api";
 import { store } from "@/src/storage";
 import { makeStyles, spacing, radius, fontSize, useTheme } from "@/src/theme";
 
@@ -22,7 +22,6 @@ export default function PassengerHome() {
 
   const [query, setQuery] = useState("");
   const [destinations, setDestinations] = useState<Destination[]>([]);
-  const [routes, setRoutes] = useState<TransportRoute[]>([]);
   const [recentIds, setRecentIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,13 +30,8 @@ export default function PassengerHome() {
     setError(null);
     setLoading(true);
     try {
-      const [d, r, rec] = await Promise.all([
-        api.listDestinations(),
-        api.listRoutes(),
-        store.getRecentDestinations(),
-      ]);
+      const [d, rec] = await Promise.all([api.listDestinations(), store.getRecentDestinations()]);
       setDestinations(d);
-      setRoutes(r);
       setRecentIds(rec);
     } catch (e: any) {
       setError(e.message || "خطأ في التحميل");
@@ -46,39 +40,17 @@ export default function PassengerHome() {
     }
   };
   useEffect(() => {
-    load();
+    const first = setTimeout(() => {
+      void load();
+    }, 0);
+    return () => clearTimeout(first);
   }, []);
 
-  // Passenger phone determines the "route + direction" that can serve the
-  // chosen destination. For MVP we pick the first serving option and place
-  // the passenger at "irbid" corridor start (progress 0) which is realistic
-  // for the pilot corridor. This mirrors the "location determined on the
-  // phone" privacy principle.
-  const goToWaiting = async (dest: Destination) => {
-    if (dest.id === "irbid") return; // can't wait for Irbid from Irbid
-    // Find a route whose direction serves this destination (not origin=dest)
-    let match: { route_id: string; direction: number } | null = null;
-    for (const r of routes) {
-      for (const d of r.directions) {
-        const served = d.served.find((s) => s.destination_id === dest.id);
-        if (served && d.origin_id === "irbid") {
-          match = { route_id: r.id, direction: d.direction };
-          break;
-        }
-      }
-      if (match) break;
-    }
-    if (!match) return;
+  // Next screen resolves which line(s) can serve this destination and where
+  // the passenger is on them (local GPS or a chosen stop).
+  const goToPick = async (dest: Destination) => {
     await store.pushRecentDestination(dest.id);
-    router.push({
-      pathname: "/passenger/waiting",
-      params: {
-        destination_id: dest.id,
-        destination_name: dest.name_ar,
-        route_id: match.route_id,
-        direction: String(match.direction),
-      },
-    });
+    router.push({ pathname: "/passenger/pick", params: { destination_id: dest.id, destination_name: dest.name_ar } });
   };
 
   const filtered = useMemo(() => {
@@ -145,7 +117,7 @@ export default function PassengerHome() {
                     <Pressable
                       key={d.id}
                       testID={`recent-chip-${d.id}`}
-                      onPress={() => goToWaiting(d)}
+                      onPress={() => goToPick(d)}
                       style={styles.chip}
                     >
                       <Text style={styles.chipLabel}>{d.name_ar}</Text>
@@ -159,7 +131,7 @@ export default function PassengerHome() {
           renderItem={({ item }) => (
             <Pressable
               testID={`destination-row-${item.id}`}
-              onPress={() => goToWaiting(item)}
+              onPress={() => goToPick(item)}
               style={({ pressed }) => [styles.row, pressed && { opacity: 0.75 }]}
             >
               <Text style={styles.rowName}>{item.name_ar}</Text>

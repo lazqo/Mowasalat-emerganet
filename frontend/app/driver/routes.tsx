@@ -4,6 +4,8 @@ import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-nati
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { api, TransportRoute, DriverSession } from "@/src/api";
+import { getCorridor } from "@/src/corridors";
+import { requestPermission, startTracking, stopTracking } from "@/src/driver/tracker";
 import { store } from "@/src/storage";
 import { makeStyles, spacing, radius, fontSize, useTheme } from "@/src/theme";
 
@@ -30,6 +32,22 @@ export default function DriverRoutes() {
       }
       setSession(s);
       try {
+        // Resume an active trip (state survives app restarts; it lives in Redis with a TTL).
+        try {
+          const t = await api.currentTrip(s.session_token);
+          router.replace({
+            pathname: "/driver/trip",
+            params: { trip_id: t.trip_id, route_id: t.route_id, direction: String(t.direction) },
+          });
+          return;
+        } catch (e: any) {
+          if (e?.status === 401) {
+            await store.clearDriverSession();
+            router.replace("/driver/login");
+            return;
+          }
+          // 404 = no active trip; anything else falls through to the route list
+        }
         const r = await api.listRoutes();
         setRoutes(r.filter((x) => s.assigned_route_ids.includes(x.id)));
       } catch (e: any) {
@@ -47,7 +65,18 @@ export default function DriverRoutes() {
     setStarting(true);
     setErr(null);
     try {
+      // Location permission first: no point starting a trip we cannot report.
+      if (!(await requestPermission())) {
+        setErr("يلزم إذن الموقع أثناء الاستخدام لبدء الرحلة. موقعك يُحسب على الجهاز ولا يُرسل.");
+        return;
+      }
+      const { fc } = await getCorridor(selectedRouteId);
       const trip = await api.startTrip(session.session_token, selectedRouteId, selectedDirection);
+      // Must be started while the app is in the foreground (Android foreground service).
+      await startTracking({
+        token: session.session_token, tripId: trip.trip_id, routeId: trip.route_id,
+        direction: trip.direction === 1 ? 1 : 0, corridor: fc,
+      });
       router.replace({
         pathname: "/driver/trip",
         params: {
@@ -64,6 +93,12 @@ export default function DriverRoutes() {
   };
 
   const logout = async () => {
+    await stopTracking();
+    if (session) {
+      try {
+        await api.logout(session.session_token); // revoke server-side
+      } catch {}
+    }
     await store.clearDriverSession();
     router.replace("/");
   };
@@ -106,7 +141,7 @@ export default function DriverRoutes() {
             <Text style={[styles.routeName, selectedRouteId === r.id && styles.routeNameSelected]}>
               {r.name_ar}
             </Text>
-            <Text style={styles.routeKm}>{r.directions[0]?.total_km.toFixed(0)} كم</Text>
+            <Text style={styles.routeKm}>{r.directions[0]?.total_km.toFixed(0)} كم{r.provisional ? " · مسار أولي" : ""}</Text>
           </Pressable>
         ))}
 

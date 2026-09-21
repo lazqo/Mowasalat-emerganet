@@ -1,30 +1,50 @@
-// Thin API client for Mowasalat backend.
+// Thin API client for the Wenak backend.
+// Privacy rule enforced here: nothing in this file ever sends a coordinate.
+// Positions are route-relative kilometres computed on the phone.
 const BASE = process.env.EXPO_PUBLIC_BACKEND_URL;
 
-async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${BASE}/api${path}`, {
-    ...opts,
-    headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
-  });
+export class ApiError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+async function req<T>(path: string, opts: RequestInit = {}, token?: string): Promise<T> {
+  if (!BASE) throw new ApiError(0, "EXPO_PUBLIC_BACKEND_URL is not configured");
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...((opts.headers as Record<string, string>) || {}),
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${BASE}/api${path}`, { ...opts, headers });
   if (!res.ok) {
     let msg = `HTTP ${res.status}`;
     try {
       const j = await res.json();
-      msg = j.detail || msg;
+      msg = typeof j.detail === "string" ? j.detail : msg;
     } catch {}
-    throw new Error(msg);
+    throw new ApiError(res.status, msg);
   }
   return res.json();
 }
 
 export type Destination = { id: string; name_ar: string; name_en: string };
+export type Stop = {
+  stop_id: string;
+  name_ar: string;
+  name_en: string | null;
+  progress_km: number;
+  kind: "hub" | "village" | "terminus";
+};
 export type RouteDirection = {
   direction: number;
   origin_id: string;
   destination_id: string;
   origin_name_ar: string;
   destination_name_ar: string;
-  served: { destination_id: string; name_ar: string; progress: number }[];
+  served: Stop[];
   total_km: number;
 };
 export type TransportRoute = {
@@ -32,6 +52,7 @@ export type TransportRoute = {
   name_ar: string;
   name_en: string;
   directions: RouteDirection[];
+  provisional: boolean; // corridor/stops not yet field-verified
 };
 export type ApproachingBus = {
   pseudonym: string;
@@ -53,6 +74,7 @@ export type DriverSession = {
   phone: string;
   name: string | null;
   assigned_route_ids: string[];
+  expires_at: number;
 };
 export type TripOut = {
   trip_id: string;
@@ -60,66 +82,55 @@ export type TripOut = {
   direction: number;
   progress_km: number;
   speed_kmh: number;
+  zone: string | null;
   pseudonym: string;
+  expires_at: number;
 };
 export type WaitingForDriver = { distance_km: number; count: number };
+export type OtpRequestOut = { sent: boolean; provider: string; expires_in_sec: number; dev_code?: string };
+/** GeoJSON corridor (LineString + stop Points) downloaded to the phone for local projection. */
+export type Corridor = { type: "FeatureCollection"; route_id: string; total_km: number; features: any[] };
+
+const json = (body: unknown): RequestInit => ({ method: "POST", body: JSON.stringify(body) });
 
 export const api = {
   listDestinations: () => req<Destination[]>("/destinations"),
   listRoutes: () => req<TransportRoute[]>("/routes"),
+  corridor: (route_id: string) => req<Corridor>(`/routes/${encodeURIComponent(route_id)}/corridor`),
 
-  // Driver
-  otpRequest: (phone: string) =>
-    req<{ sent: boolean }>("/driver/otp/request", {
-      method: "POST",
-      body: JSON.stringify({ phone }),
-    }),
-  otpVerify: (phone: string, code: string) =>
-    req<DriverSession>("/driver/otp/verify", {
-      method: "POST",
-      body: JSON.stringify({ phone, code }),
-    }),
-  startTrip: (session_token: string, route_id: string, direction: number) =>
-    req<TripOut>("/driver/trip/start", {
-      method: "POST",
-      body: JSON.stringify({ session_token, route_id, direction }),
-    }),
-  updateProgress: (session_token: string, trip_id: string, progress_km: number, speed_kmh = 40) =>
-    req<TripOut>("/driver/trip/progress", {
-      method: "POST",
-      body: JSON.stringify({ session_token, trip_id, progress_km, speed_kmh }),
-    }),
-  endTrip: (session_token: string, trip_id: string) =>
-    req<{ ended: boolean }>("/driver/trip/end", {
-      method: "POST",
-      body: JSON.stringify({ session_token, trip_id }),
-    }),
-  tripWaiting: (session_token: string, trip_id: string) =>
-    req<WaitingForDriver[]>(
-      `/driver/trip/${trip_id}/waiting?session_token=${encodeURIComponent(session_token)}`,
-    ),
+  // Driver auth
+  otpRequest: (phone: string) => req<OtpRequestOut>("/driver/otp/request", json({ phone })),
+  otpVerify: (phone: string, code: string) => req<DriverSession>("/driver/otp/verify", json({ phone, code })),
+  logout: (token: string) => req<{ ok: boolean }>("/driver/logout", { method: "POST" }, token),
+  me: (token: string) => req<DriverSession>("/driver/me", {}, token),
 
-  // Passenger
+  // Driver trips (bearer token in the Authorization header, never in the body or URL)
+  startTrip: (token: string, route_id: string, direction: number) =>
+    req<TripOut>("/driver/trip/start", json({ route_id, direction }), token),
+  updateProgress: (token: string, trip_id: string, progress_km: number, speed_kmh = 40, zone?: string) =>
+    req<TripOut>("/driver/trip/progress", json({ trip_id, progress_km, speed_kmh, zone }), token),
+  endTrip: (token: string, trip_id: string) => req<{ ended: boolean }>("/driver/trip/end", json({ trip_id }), token),
+  currentTrip: (token: string) => req<TripOut>("/driver/trip/current", {}, token),
+  tripWaiting: (token: string, trip_id: string) =>
+    req<WaitingForDriver[]>(`/driver/trip/${encodeURIComponent(trip_id)}/waiting`, {}, token),
+
+  // Passenger (anonymous)
   buses: (destination_id: string, from_progress_km = 0, route_id?: string, direction?: number) => {
-    const p = new URLSearchParams({
-      destination_id,
-      from_progress_km: String(from_progress_km),
-    });
+    const p = new URLSearchParams({ destination_id, from_progress_km: String(from_progress_km) });
     if (route_id) p.set("route_id", route_id);
     if (direction !== undefined) p.set("direction", String(direction));
     return req<ApproachingBus[]>(`/passenger/buses?${p.toString()}`);
   },
-  createWait: (destination_id: string, route_id: string, direction: number, wait_progress_km: number) =>
-    req<WaitOut>("/passenger/wait", {
-      method: "POST",
-      body: JSON.stringify({ destination_id, route_id, direction, wait_progress_km }),
-    }),
+  // Where the passenger waits: a route-relative km (phone-projected) or a chosen stop. Never a coordinate.
+  createWait: (destination_id: string, route_id: string, direction: number,
+               where: { wait_progress_km: number } | { stop_id: string }) =>
+    req<WaitOut>("/passenger/wait", json({ destination_id, route_id, direction, ...where })),
   waitStatus: (wait_id: string) =>
     req<{ wait_id: string; state: string; expires_at: number; buses: ApproachingBus[] }>(
-      `/passenger/wait/${wait_id}/status`,
+      `/passenger/wait/${encodeURIComponent(wait_id)}/status`,
     ),
   waitBoard: (wait_id: string) =>
-    req<{ boarded: boolean }>(`/passenger/wait/${wait_id}/board`, { method: "POST" }),
+    req<{ boarded: boolean }>(`/passenger/wait/${encodeURIComponent(wait_id)}/board`, { method: "POST" }),
   waitCancel: (wait_id: string) =>
-    req<{ cancelled: boolean }>(`/passenger/wait/${wait_id}/cancel`, { method: "POST" }),
+    req<{ cancelled: boolean }>(`/passenger/wait/${encodeURIComponent(wait_id)}/cancel`, { method: "POST" }),
 };

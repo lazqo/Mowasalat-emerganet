@@ -1,4 +1,7 @@
 import "@/src/rtl";
+// Registers the driver location task with TaskManager at startup (required
+// for the Android foreground service to deliver fixes after a restart).
+import "@/src/driver/tracker";
 
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";

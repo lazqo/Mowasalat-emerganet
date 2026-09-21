@@ -1,22 +1,36 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
-    "version": "1.0.0",
+    "name": "Wenak",
+    "slug": "wenak",
+    "version": "0.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontend",
-    "userInterfaceStyle": "automatic",
+    "scheme": "wenak",
+    "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.emergent.routeconnect.hj3cur"
+      "supportsTablet": false,
+      "bundleIdentifier": "jo.wenak.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "يستخدم وينك موقعك على جهازك فقط لحساب مكانك على خط الباص. لا يتم إرسال إحداثياتك إلى الخادم.",
+        "CFBundleDisplayName": "وينك"
+      }
     },
     "android": {
+      "package": "jo.wenak.app",
+      "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#000000"
+        "backgroundColor": "#586A45"
       },
-      "package": "com.emergent.routeconnect.hj3cur"
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
+      ],
+      "blockedPermissions": [
+        "android.permission.ACCESS_BACKGROUND_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -31,7 +45,16 @@
           "image": "./assets/images/splash-image.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#000000"
+          "backgroundColor": "#586A45"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "يستخدم وينك موقعك على جهازك فقط لحساب مكانك على خط الباص. لا يتم إرسال إحداثياتك إلى الخادم.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": true
         }
       ],
       "expo-font",

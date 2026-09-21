@@ -18,6 +18,7 @@ export default function DriverLogin() {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [devCode, setDevCode] = useState<string | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
@@ -32,7 +33,10 @@ export default function DriverLogin() {
     setErr(null);
     setLoading(true);
     try {
-      await api.otpRequest(phone);
+      const r = await api.otpRequest(phone);
+      // Development builds against a mock OTP provider get the code back;
+      // production never does.
+      setDevCode(r.dev_code ?? null);
       setStep("code");
     } catch (e: any) {
       setErr(e.message || "خطأ");
@@ -96,7 +100,7 @@ export default function DriverLogin() {
             </View>
           ) : (
             <View style={{ gap: spacing.sm }}>
-              <Text style={styles.label}>الرمز (أي ٦ أرقام للتجربة)</Text>
+              <Text style={styles.label}>الرمز المرسل برسالة نصية</Text>
               <TextInput
                 testID="driver-otp-input"
                 value={code}
@@ -108,15 +112,26 @@ export default function DriverLogin() {
                 textAlign="center"
                 maxLength={6}
               />
-              <Pressable
-                onPress={() => {
-                  setStep("phone");
-                  setCode("");
-                }}
-                testID="driver-change-phone"
-              >
-                <Text style={styles.link}>تغيير رقم الهاتف</Text>
-              </Pressable>
+              {devCode ? (
+                <Text style={styles.devHint} testID="driver-dev-code">
+                  رمز التجربة (بيئة التطوير فقط): {devCode}
+                </Text>
+              ) : null}
+              <View style={styles.linkRow}>
+                <Pressable
+                  onPress={() => {
+                    setStep("phone");
+                    setCode("");
+                    setDevCode(null);
+                  }}
+                  testID="driver-change-phone"
+                >
+                  <Text style={styles.link}>تغيير رقم الهاتف</Text>
+                </Pressable>
+                <Pressable onPress={sendCode} disabled={loading} testID="driver-resend-code">
+                  <Text style={styles.link}>إعادة الإرسال</Text>
+                </Pressable>
+              </View>
             </View>
           )}
           {err ? (
@@ -183,6 +198,8 @@ const useStyles = makeStyles((colors) => ({
   },
   codeInput: { letterSpacing: 8, fontSize: 28, textAlign: "center" },
   link: { color: colors.brandPrimary, fontSize: fontSize.base, paddingVertical: spacing.xs },
+  linkRow: { flexDirection: "row", justifyContent: "space-between" },
+  devHint: { color: colors.warning, fontSize: fontSize.base },
   err: { color: colors.error, fontSize: fontSize.base },
   footer: {
     paddingHorizontal: spacing.lg,
