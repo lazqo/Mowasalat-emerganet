@@ -2010,7 +2010,8 @@
     "name_ar": "إربد",
     "name_en": "Irbid",
     "progress_km": 0.0,
-    "note": "Provisional: OSM city centre. Replace with the actual Bani Kinana bus complex (مجمع) used by these lines."
+    "note": "PLACEHOLDER, NOT THE REAL HUB: OpenStreetMap city-centre point for Irbid. Replace with the actual bus complex (مجمع) these lines depart from before public use.",
+    "placeholder": true
    },
    "geometry": {
     "type": "Point",
@@ -2028,7 +2029,8 @@
     "progress_km": 5.0,
     "note": "Provisional: village detected along the OSM corridor; confirm the actual waiting point with drivers.",
     "stop_id": "beit_ras",
-    "name_en": "Beit Ras"
+    "name_en": "Beit Ras",
+    "provisional": true
    },
    "geometry": {
     "type": "Point",
@@ -2046,7 +2048,8 @@
     "progress_km": 7.0,
     "note": "Provisional: village detected along the OSM corridor; confirm the actual waiting point with drivers.",
     "stop_id": "hareema",
-    "name_en": "Hareema"
+    "name_en": "Hareema",
+    "provisional": true
    },
    "geometry": {
     "type": "Point",
@@ -2064,7 +2067,8 @@
     "progress_km": 8.0,
     "note": "Provisional: village detected along the OSM corridor; confirm the actual waiting point with drivers.",
     "stop_id": "al_qasfa",
-    "name_en": "Al-Qasfa"
+    "name_en": "Al-Qasfa",
+    "provisional": true
    },
    "geometry": {
     "type": "Point",
@@ -2082,7 +2086,8 @@
     "progress_km": 10.0,
     "note": "Provisional: village detected along the OSM corridor; confirm the actual waiting point with drivers.",
     "stop_id": "sama_rousan",
-    "name_en": "Sama Al-Rousan"
+    "name_en": "Sama Al-Rousan",
+    "provisional": true
    },
    "geometry": {
     "type": "Point",
@@ -2100,7 +2105,8 @@
     "progress_km": 12.0,
     "note": "Provisional: village detected along the OSM corridor; confirm the actual waiting point with drivers.",
     "stop_id": "izreet",
-    "name_en": "Izreet"
+    "name_en": "Izreet",
+    "provisional": true
    },
    "geometry": {
     "type": "Point",
@@ -2118,7 +2124,8 @@
     "name_ar": "حبراص",
     "name_en": "Habras",
     "progress_km": 15.846,
-    "note": "OSM place centre; verify the village bus stop"
+    "note": "OSM place centre; verify the village bus stop",
+    "provisional": true
    },
    "geometry": {
     "type": "Point",
@@ -2138,6 +2145,7 @@
    "village waiting points",
    "terminus stop"
   ],
-  "traced_on": "2026-09-21"
+  "traced_on": "2026-09-21",
+  "note": "Auto-traced field data. Not verified. Do not ship to the public as-is."
  }
 }

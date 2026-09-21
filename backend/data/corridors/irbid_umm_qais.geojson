@@ -3562,7 +3562,8 @@
     "name_ar": "إربد",
     "name_en": "Irbid",
     "progress_km": 0.0,
-    "note": "Provisional: OSM city centre. Replace with the actual Bani Kinana bus complex (مجمع) used by these lines."
+    "note": "PLACEHOLDER, NOT THE REAL HUB: OpenStreetMap city-centre point for Irbid. Replace with the actual bus complex (مجمع) these lines depart from before public use.",
+    "placeholder": true
    },
    "geometry": {
     "type": "Point",
@@ -3580,7 +3581,8 @@
     "progress_km": 5.0,
     "note": "Provisional: village detected along the OSM corridor; confirm the actual waiting point with drivers.",
     "stop_id": "kufr_yuba",
-    "name_en": "Kufr Yuba"
+    "name_en": "Kufr Yuba",
+    "provisional": true
    },
    "geometry": {
     "type": "Point",
@@ -3598,7 +3600,8 @@
     "progress_km": 7.0,
     "note": "Provisional: village detected along the OSM corridor; confirm the actual waiting point with drivers.",
     "stop_id": "kufr_an",
-    "name_en": "Kufr 'An"
+    "name_en": "Kufr 'An",
+    "provisional": true
    },
    "geometry": {
     "type": "Point",
@@ -3616,7 +3619,8 @@
     "progress_km": 11.0,
     "note": "Provisional: village detected along the OSM corridor; confirm the actual waiting point with drivers.",
     "stop_id": "kufr_rahta",
-    "name_en": "Kufr Rahta"
+    "name_en": "Kufr Rahta",
+    "provisional": true
    },
    "geometry": {
     "type": "Point",
@@ -3634,7 +3638,8 @@
     "progress_km": 14.0,
     "note": "Provisional: village detected along the OSM corridor; confirm the actual waiting point with drivers.",
     "stop_id": "al_kharaj",
-    "name_en": "Al-Kharaj"
+    "name_en": "Al-Kharaj",
+    "provisional": true
    },
    "geometry": {
     "type": "Point",
@@ -3652,7 +3657,8 @@
     "progress_km": 19.0,
     "note": "Provisional: village detected along the OSM corridor; confirm the actual waiting point with drivers.",
     "stop_id": "saydour",
-    "name_en": "Saydour"
+    "name_en": "Saydour",
+    "provisional": true
    },
    "geometry": {
     "type": "Point",
@@ -3670,7 +3676,8 @@
     "progress_km": 22.0,
     "note": "Provisional: village detected along the OSM corridor; confirm the actual waiting point with drivers.",
     "stop_id": "balad_al_basha",
-    "name_en": "Balad Al-Basha"
+    "name_en": "Balad Al-Basha",
+    "provisional": true
    },
    "geometry": {
     "type": "Point",
@@ -3688,7 +3695,8 @@
     "name_ar": "أم قيس",
     "name_en": "Umm Qais",
     "progress_km": 27.878,
-    "note": "OSM place centre; verify the village bus stop"
+    "note": "OSM place centre; verify the village bus stop",
+    "provisional": true
    },
    "geometry": {
     "type": "Point",
@@ -3708,6 +3716,7 @@
    "village waiting points",
    "terminus stop"
   ],
-  "traced_on": "2026-09-21"
+  "traced_on": "2026-09-21",
+  "note": "Auto-traced field data. Not verified. Do not ship to the public as-is."
  }
 }

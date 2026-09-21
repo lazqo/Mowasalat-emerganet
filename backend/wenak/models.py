@@ -34,6 +34,8 @@ class TransportRoute(BaseModel):
     name_ar: str
     name_en: str
     directions: List[RouteDirection]
+    # True while the corridor/stops come from an unverified OSM trace.
+    provisional: bool = True
 
 
 class Destination(BaseModel):
@@ -104,10 +106,13 @@ class TripOut(BaseModel):
 
 # ---- passenger -----------------------------------------------------------
 class WaitCreateIn(BaseModel):
+    """Either a chosen stop (`stop_id`) or a phone-computed route-relative
+    position (`wait_progress_km`, rounded server-side). Never a coordinate."""
     destination_id: str = Field(max_length=64)
     route_id: str = Field(max_length=64)
     direction: Direction
-    wait_progress_km: float = Field(ge=0, le=500)
+    wait_progress_km: Optional[float] = Field(default=None, ge=0, le=500)
+    stop_id: Optional[str] = Field(default=None, max_length=64)
 
 
 class WaitOut(BaseModel):

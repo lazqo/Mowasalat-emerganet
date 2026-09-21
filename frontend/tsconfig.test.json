@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/geo/**/*.ts",
+    "src/driver/reporting.ts",
+    "src/driver/reporting.test.ts",
+    "src/privacy.test.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

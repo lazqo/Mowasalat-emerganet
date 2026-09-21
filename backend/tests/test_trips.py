@@ -114,6 +114,20 @@ def test_wait_validation(client):
     ok = client.post("/api/passenger/wait", json={"destination_id": "irbid", "route_id": "irbid_malka",
                                                   "direction": 1, "wait_progress_km": 1.0})
     assert ok.status_code == 200
+    # stop picker: a stop that is not on this line/direction
+    bad = client.post("/api/passenger/wait", json={"destination_id": "malka", "route_id": "irbid_malka",
+                                                   "direction": 0, "stop_id": "beit_ras"})
+    assert bad.status_code == 404
+    # stop picker: stop behind or equal to the destination
+    bad = client.post("/api/passenger/wait", json={"destination_id": "hor", "route_id": "irbid_malka",
+                                                   "direction": 0, "stop_id": "hatim"})
+    assert bad.status_code == 400
+    ok = client.post("/api/passenger/wait", json={"destination_id": "malka", "route_id": "irbid_malka",
+                                                  "direction": 0, "stop_id": "hatim"})
+    assert ok.status_code == 200 and ok.json()["wait_progress_km"] == 16.0
+    # neither given
+    assert client.post("/api/passenger/wait", json={"destination_id": "malka", "route_id": "irbid_malka",
+                                                    "direction": 0}).status_code == 422
 
 
 def test_wait_cancel_is_idempotent_404(client):
@@ -158,4 +172,6 @@ def test_mongo_holds_only_config_and_aggregates(client):
     drivers = client.portal.call(db.drivers.find({}, {"_id": 0}).to_list, 100)
     assert all(set(d) == {"id", "phone", "name", "assigned_route_ids", "verification_tier", "created_at"} for d in drivers)
     stats = client.portal.call(db.demand_stats.find({}, {"_id": 0}).to_list, 100)
-    assert all(set(s) == {"destination_id", "hour", "requests"} for s in stats)
+    k = client.app.state.settings.analytics_k_min
+    assert all(set(s) == {"route_id", "direction", "segment", "bucket", "requests"} and s["requests"] >= k
+               for s in stats)

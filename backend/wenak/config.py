@@ -65,6 +65,19 @@ class Settings:
     passenger_wait_per_minute_per_ip: int = int(os.environ.get("PASSENGER_WAIT_PER_MINUTE_PER_IP", 30))
     read_per_minute_per_ip: int = int(os.environ.get("READ_PER_MINUTE_PER_IP", 1200))
 
+    # Demand analytics (aggregate only). Cells under k_min never reach Mongo.
+    analytics_k_min: int = int(os.environ.get("ANALYTICS_K_MIN", 5))
+    analytics_segment_km: float = float(os.environ.get("ANALYTICS_SEGMENT_KM", 3.0))
+    analytics_flush_sec: int = int(os.environ.get("ANALYTICS_FLUSH_SEC", 300))
+
+    # Server-sent events
+    sse_tick_sec: float = float(os.environ.get("SSE_TICK_SEC", 2.0))
+    sse_keepalive_sec: float = float(os.environ.get("SSE_KEEPALIVE_SEC", 15.0))
+    sse_max_sec: float = float(os.environ.get("SSE_MAX_SEC", 25 * 60))
+
+    # Passenger positions are rounded to this before storage (km).
+    wait_position_round_km: float = float(os.environ.get("WAIT_POSITION_ROUND_KM", 0.1))
+
     @property
     def is_production(self) -> bool:
         return self.environment.lower() in ("production", "prod")

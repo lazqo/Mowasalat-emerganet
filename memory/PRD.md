@@ -57,10 +57,17 @@ to be field-checked.
 Payments, wallet, bookings, seats, chat, calls, ratings, driver commission,
 passenger accounts, driver bidding, fare negotiation.
 
-## Not implemented in this MVP (deferred to real device):
-- **Real GPS.** Driver progress is advanced with a "+0.5 km" button. On a
-  real device, swap this for `expo-location` computing route-relative
-  progress on-device.
+## Location model (implemented)
+- **Driver:** `expo-location` background task backed by an Android
+  foreground service (no background-location permission). Fixes are
+  projected onto the corridor on the phone; only route/direction/progress/
+  speed/zone is sent, every 5 s / 50 m moving, 30 s stopped. Off-corridor or
+  wrong-direction fixes are not sent. Service stops on trip end / logout.
+- **Passenger:** one foreground fix projected locally, or a chosen stop.
+  No stream, no background location.
+- **Realtime:** SSE streams for approaching buses and waiting demand.
+
+## Not implemented in this MVP:
 - **Map.** Corridor is shown as a progress bar. `react-native-maps` with OSM
   tiles can be layered on later.
 - **Real SMS OTP.** OTP codes are real (hashed, expiring, one-use, attempt

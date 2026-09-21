@@ -52,6 +52,7 @@ export type TransportRoute = {
   name_ar: string;
   name_en: string;
   directions: RouteDirection[];
+  provisional: boolean; // corridor/stops not yet field-verified
 };
 export type ApproachingBus = {
   pseudonym: string;
@@ -120,8 +121,10 @@ export const api = {
     if (direction !== undefined) p.set("direction", String(direction));
     return req<ApproachingBus[]>(`/passenger/buses?${p.toString()}`);
   },
-  createWait: (destination_id: string, route_id: string, direction: number, wait_progress_km: number) =>
-    req<WaitOut>("/passenger/wait", json({ destination_id, route_id, direction, wait_progress_km })),
+  // Where the passenger waits: a route-relative km (phone-projected) or a chosen stop. Never a coordinate.
+  createWait: (destination_id: string, route_id: string, direction: number,
+               where: { wait_progress_km: number } | { stop_id: string }) =>
+    req<WaitOut>("/passenger/wait", json({ destination_id, route_id, direction, ...where })),
   waitStatus: (wait_id: string) =>
     req<{ wait_id: string; state: string; expires_at: number; buses: ApproachingBus[] }>(
       `/passenger/wait/${encodeURIComponent(wait_id)}/status`,

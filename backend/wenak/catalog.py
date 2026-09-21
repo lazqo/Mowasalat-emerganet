@@ -90,14 +90,16 @@ def load_catalog(data_dir: Path = DATA_DIR) -> Catalog:
         inbound = RouteDirection(direction=1, origin_id=term.stop_id, destination_id=hub.stop_id,
                                  origin_name_ar=term.name_ar, destination_name_ar=hub.name_ar,
                                  served=in_stops, total_km=round(total_km, 3))
+        provisional = fc.get("provenance", {}).get("status", "provisional") != "field_verified"
         routes.append(TransportRoute(id=rid, name_ar=fc["name_ar"], name_en=fc["name_en"],
-                                     directions=[outbound, inbound]))
+                                     directions=[outbound, inbound], provisional=provisional))
         for s in out_stops:
             dests.setdefault(s.stop_id, Destination(id=s.stop_id, name_ar=s.name_ar,
                                                     name_en=s.name_en or s.stop_id))
         # Public corridor: geometry + stops only (no provenance notes needed on the phone).
         corridors[rid] = {
             "type": "FeatureCollection", "route_id": rid, "total_km": round(total_km, 3),
+            "provisional": provisional,
             "attribution": "© OpenStreetMap contributors (ODbL)",
             "features": [line] + [f for f in fc["features"] if f["geometry"]["type"] == "Point"],
         }

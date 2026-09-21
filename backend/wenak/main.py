@@ -8,6 +8,9 @@ from fastapi import FastAPI, Request
 from motor.motor_asyncio import AsyncIOMotorClient
 from starlette.middleware.cors import CORSMiddleware
 
+import asyncio
+
+from .analytics import flush_loop
 from .catalog import load_catalog
 from .config import Settings, settings as default_settings
 from .otp import build_provider
@@ -38,14 +41,17 @@ def create_app(settings: Settings | None = None, *, redis=None, db=None, otp_pro
             app.state.db = app.state.mongo[s.db_name]
         await app.state.db.drivers.create_index("phone", unique=True)
         await app.state.db.drivers.create_index("id", unique=True)
-        await app.state.db.demand_stats.create_index([("destination_id", 1), ("hour", 1)], unique=True)
+        await app.state.db.demand_stats.create_index(
+            [("route_id", 1), ("direction", 1), ("segment", 1), ("bucket", 1)], unique=True)
         app.state.otp_provider = otp_provider or build_provider(s.otp_provider)
         logger.info("Wenak API up: env=%s otp=%s routes=%d redis=%s",
                     s.environment, app.state.otp_provider.name, len(app.state.catalog.routes),
                     "external" if s.redis_url else "in-memory (dev)")
+        flusher = asyncio.create_task(flush_loop(app.state.store, app.state.db, s))
         try:
             yield
         finally:
+            flusher.cancel()
             if app.state.mongo is not None:
                 app.state.mongo.close()
             await r.aclose()

@@ -17,6 +17,7 @@ def test_routes_shape(client):
     routes = client.get("/api/routes").json()
     assert [r["id"] for r in routes] == ["irbid_malka", "irbid_sama_rousan", "irbid_kufr_soum", "irbid_habras", "irbid_umm_qais"]
     for rt in routes:
+        assert rt["provisional"] is True  # OSM trace, not field-verified
         assert len(rt["directions"]) == 2
         out, inb = rt["directions"]
         assert out["direction"] == 0 and inb["direction"] == 1
@@ -32,7 +33,9 @@ def test_routes_shape(client):
 
 def test_corridor_geojson_served_for_phone_projection(client):
     fc = client.get("/api/routes/irbid_malka/corridor").json()
-    assert fc["type"] == "FeatureCollection"
+    assert fc["type"] == "FeatureCollection" and fc["provisional"] is True
+    hub = next(f for f in fc["features"] if f["properties"].get("kind") == "hub")
+    assert hub["properties"]["placeholder"] is True
     line = [f for f in fc["features"] if f["geometry"]["type"] == "LineString"]
     assert len(line) == 1 and len(line[0]["geometry"]["coordinates"]) > 100
     assert client.get("/api/routes/nope/corridor").status_code == 404

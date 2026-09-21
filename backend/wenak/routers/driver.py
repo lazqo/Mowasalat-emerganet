@@ -12,6 +12,7 @@ from ..matching import waiting_ahead
 from ..models import (DriverSessionOut, EndTripIn, OtpRequestIn, OtpVerifyIn, StartTripIn,
                       TripOut, TripProgressIn, WaitingPassengerForDriver)
 from ..otp import generate_code
+from ..realtime import sse_response, stream
 from ..phone import mask_phone
 from ..state import RealtimeStore
 
@@ -148,6 +149,24 @@ async def trip_current(sess: Dict[str, str] = Depends(current_driver), store: Re
     if not tr:
         raise HTTPException(404, "No active trip")
     return _trip_out(tr)
+
+
+@router.get("/trip/{trip_id}/stream")
+async def trip_stream(trip_id: str, request: Request, sess: Dict[str, str] = Depends(current_driver),
+                      store: RealtimeStore = Depends(get_store), settings: Settings = Depends(get_settings)):
+    """SSE: `demand` events with waiting passengers ahead (bucketed by
+    distance) and the trip's own state; `ended` when the trip is gone."""
+    await _own_trip(trip_id, sess, store)
+
+    async def produce():
+        tr = await store.get_trip(trip_id)
+        if not tr or tr.get("driver_id") != sess["driver_id"]:
+            return None
+        waits = await store.waits_on(tr["route_id"], int(tr["direction"]))
+        ahead = waiting_ahead(waits, float(tr["progress_km"]))
+        return {"trip_id": trip_id, "progress_km": float(tr["progress_km"]),
+                "waiting": [w.model_dump() for w in ahead], "total_waiting": sum(w.count for w in ahead)}
+    return sse_response(stream(request, settings, "demand", produce))
 
 
 @router.get("/trip/{trip_id}/waiting", response_model=List[WaitingPassengerForDriver])
