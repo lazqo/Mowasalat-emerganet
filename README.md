@@ -166,7 +166,7 @@ eas build --platform android --profile pilot
    Android foreground service, passenger one-shot location or stop picker,
    line choice, SSE for both sides, k-anonymous demand analytics, geometry
    and privacy-guard tests. Real-device acceptance on Irbid ↔ Malka is
-   still to be run.
+   still to be run: see `docs/pilot-acceptance-test.md`.
 3. **Phase 3:** Twilio `OtpProvider` (secrets from environment only).
 4. **Phase 4:** EAS Android APK and two-phone acceptance test on
    Irbid ↔ Malka: passenger sees the approaching bus, driver sees the
