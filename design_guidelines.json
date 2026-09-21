@@ -1,0 +1,169 @@
+{
+  "app_name": "Mowasalat / مواصلات",
+  "personality": "1 iOS-Native Clean (adapted for high-utility, Arabic-first, and low-end Android performance)",
+  "personality_one_liner": "A trustworthy, highly functional Levantine transit utility that prioritizes instant readability and calm, earthy warmth over gamified tech aesthetics.",
+  "color": {
+    "surface": "#FAF8F5",
+    "onSurface": "#2C2B29",
+    "surfaceSecondary": "#F2EFEB",
+    "onSurfaceSecondary": "#2C2B29",
+    "surfaceTertiary": "#EAE6DF",
+    "onSurfaceTertiary": "#2C2B29",
+    "surfaceInverse": "#2C2B29",
+    "onSurfaceInverse": "#FAF8F5",
+    "brand": "#586A45",
+    "brandPrimary": "#586A45",
+    "onBrandPrimary": "#FFFFFF",
+    "brandSecondary": "#8C7B5D",
+    "onBrandSecondary": "#FFFFFF",
+    "brandTertiary": "#D6D1C4",
+    "onBrandTertiary": "#2C2B29",
+    "success": "#4A7C59",
+    "onSuccess": "#FFFFFF",
+    "warning": "#C69036",
+    "onWarning": "#2C2B29",
+    "error": "#A64B32",
+    "onError": "#FFFFFF",
+    "info": "#606A61",
+    "onInfo": "#FFFFFF",
+    "border": "#E2DFD8",
+    "borderStrong": "#C2BCAE",
+    "divider": "#E8E5DF",
+    "muted": "#75726C",
+    "onBrand": "#FFFFFF"
+  },
+  "typography": {
+    "displayFontFamily": "Cairo",
+    "textFontFamily": "Cairo",
+    "scale": {
+      "sm": 12,
+      "base": 14,
+      "lg": 16,
+      "xl": 20,
+      "2xl": 24
+    }
+  },
+  "spacing": {
+    "rule": "Generous touch targets (44pt+) and comfortable padding to ensure readability on cheap screens and outside in bright sunlight. Use flex gaps over rigid margins where possible.",
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 48
+  },
+  "radius_tokens": {
+    "sm": 6,
+    "md": 12,
+    "lg": 20,
+    "pill": 999
+  },
+  "shadow_tier": "1",
+  "navigation": "stack_only",
+  "icon_set": "Feather",
+  "glassmorphism": {
+    "enabled": "false",
+    "do's": [
+      "Use solid surfaceSecondary with shadow tier 1 for elevated cards and bottom sheets to maintain performance on cheap Androids."
+    ],
+    "dont's": [
+      "No blur or glassmorphism on the map overlays or bottom sheets—use solid Levantine off-white (surface) to keep the app highly performant and battery-friendly."
+    ]
+  },
+  "platform_libraries": {
+    "glass": {
+      "ios": "expo-glass-effect",
+      "android": "expo-blur",
+      "low_end_android_fallback": "solid surfaceSecondary"
+    },
+    "image": "expo-image",
+    "blur": "expo-blur",
+    "bottom_sheet": "@gorhom/bottom-sheet",
+    "animation": "react-native-reanimated",
+    "gesture": "react-native-gesture-handler",
+    "maps": "react-native-maps"
+  },
+  "screens": [
+    {
+      "name": "RoleSelection",
+      "purpose": "A welcoming, full-bleed hero screen where users pick 'Passenger' or 'Driver'.",
+      "states": {
+        "loading": "Spinner in the center of the hero image",
+        "empty": "N/A",
+        "error": "Standard snackbar error for network failures"
+      },
+      "layout": "Full-bleed background image with a top-to-bottom dark gradient scrim (Layer 1). At the bottom 30%, two large, pill-shaped buttons ('Passenger' and 'Driver') styled with brandPrimary and surfaceInverse. Text overlay uses onSurfaceInverse."
+    },
+    {
+      "name": "PassengerMapSearch",
+      "purpose": "The core passenger view featuring the map and the 'Where are you going?' (وين رايح؟) search.",
+      "states": {
+        "loading": "Skeleton rows inside the bottom sheet for recent destinations",
+        "empty": "Illustration of a bus icon in a tinted brandTertiary container with 'No recent destinations'",
+        "error": "Retry button above the search bar"
+      },
+      "layout": "Map view fills flex: 1. OpenStreetMap tiles used. Pinned at the bottom is a @gorhom/bottom-sheet starting at 30% height, expanding to 70%. The sheet contains a large text input (وين رايح؟) and a vertical list of recent destinations (minimum 56pt height tappable rows). RTL aligned."
+    },
+    {
+      "name": "PassengerWaiting",
+      "purpose": "Shows live ETAs of approaching buses after a destination is selected.",
+      "states": {
+        "loading": "Spinner centered in the bottom sheet",
+        "empty": "No buses on this route currently illustration.",
+        "error": "Error message with 'Retry' button in the sheet."
+      },
+      "layout": "Map in the background showing route corridor. Bottom sheet contains list of approaching buses. High contrast route numbers using brandPrimary. A sticky 'I'm waiting here' (أنا مستني هون) button pinned at the very bottom inside a SafeAreaView with surface background."
+    },
+    {
+      "name": "DriverLogin",
+      "purpose": "Phone and OTP login strictly for drivers.",
+      "states": {
+        "loading": "Button shows loading spinner",
+        "empty": "N/A",
+        "error": "Red error text below the input field using error token"
+      },
+      "layout": "Clean single-column form. Large Arabic numerals for input. Label above input. Primary CTA sticky at the bottom inside KeyboardAvoidingView."
+    },
+    {
+      "name": "DriverActiveTrip",
+      "purpose": "Live demand-visibility dashboard for the driver showing waiting passengers ahead.",
+      "states": {
+        "loading": "Skeleton metric cards",
+        "empty": "0 passengers waiting state (calm surfaceTertiary card)",
+        "error": "Network disconnected banner at the top of the screen"
+      },
+      "layout": "High-contrast utility layout. Large central metric card ('٣ ركاب بانتظارك') using displayFontFamily. Map is minimized or secondary. A large 'End Trip' (خلصت) button sticky at the bottom."
+    }
+  ],
+  "images": {
+    "splash_bg": {
+      "url": "https://images.unsplash.com/photo-1571685330542-0da6a6a8edc2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1ODh8MHwxfHNlYXJjaHwxfHxqb3JkYW4lMjBsYW5kc2NhcGUlMjBhZXN0aGV0aWMlMjBtaW5pbWFsfGVufDB8fHx8MTc4OTk3MTY0N3ww&ixlib=rb-4.1.0&q=85",
+      "dark": "https://images.pexels.com/photos/36124338/pexels-photo-36124338.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "alt": "Minimal landscape of Jordan with earthy tones"
+    },
+    "city_transit_hero": {
+      "url": "https://images.unsplash.com/photo-1709276351570-a317189def72?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODd8MHwxfHNlYXJjaHwxfHxhbW1hbiUyMGpvcmRhbiUyMHN0cmVldCUyMHRyYW5zaXQlMjBwaG90b2dyYXBoeXxlbnwwfHx8fDE3ODk5NzE2NDd8MA&ixlib=rb-4.1.0&q=85",
+      "dark": "https://images.pexels.com/photos/20482432/pexels-photo-20482432.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "alt": "Street view of Amman Jordan focusing on transit and mobility"
+    }
+  },
+  "haptics": {
+    "events": {
+      "button_press": "selection",
+      "bottom_sheet_snap": "light",
+      "bus_arrived_alert": "success",
+      "error_state": "error"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Strictly enforce RTL layout (`I18nManager.forceRTL(true)`) for all text, chevrons, and layout directions.",
+    "Do NOT use any blue, indigo, or purple. Stick to the earthy Levantine palette defined in the color object (Olive green, rust, sand, ochre).",
+    "Font weight MUST NOT exceed 500 anywhere. Create hierarchy through size (scale tokens) and color contrast, not heavy bold cuts.",
+    "Disable glassmorphism/blur overlays entirely. Since this app targets cheap Android devices and weak 3G networks, use solid `surfaceSecondary` with `shadow_tier: 1` for elevated components like the bottom sheet.",
+    "Implement a mandatory vertical gradient scrim (`expo-linear-gradient` transparent to 80% surfaceInverse) on the RoleSelection hero image before placing text or buttons on top.",
+    "Ensure 'وين رايح؟' and 'أنا مستني هون' CTAs are pinned to the bottom (sticky) and wrapped in SafeAreaView so they are easily reachable with the thumb.",
+    "DriverActiveTrip must be high-contrast and readable under direct sunlight. Large metrics should use the display font.",
+    "Always provide Empty, Loading, and Error states for map data and lists, filling the available flex space."
+  ]
+}
