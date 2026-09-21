@@ -7,9 +7,10 @@ import { api, ApproachingBus, WaitOut } from "@/src/api";
 import { makeStyles, spacing, radius, fontSize, useTheme } from "@/src/theme";
 
 const POLL_MS = 5000;
-// Passenger is assumed to be near Irbid start (progress 0km). Buses on this
-// direction are heading away from Irbid, so on the outbound direction any
-// active bus with progress <= passenger_progress + slack is "approaching".
+// PHASE 2 (pending): replace with the passenger's route-relative position,
+// computed on the phone from local GPS projected onto the corridor, or from
+// a chosen stop/waiting point. Until then the passenger is assumed to be at
+// the Irbid end of the line. No coordinate is ever sent to the backend.
 const PASSENGER_PROGRESS_KM = 0.5;
 
 function stateLabel(s: ApproachingBus["state"]): string {
@@ -59,9 +60,15 @@ export default function PassengerWaiting() {
   };
 
   useEffect(() => {
-    poll();
-    timer.current = setInterval(poll, POLL_MS);
-    return () => timer.current && clearInterval(timer.current);
+    const tick = () => {
+      void poll();
+    };
+    const first = setTimeout(tick, 0);
+    timer.current = setInterval(tick, POLL_MS);
+    return () => {
+      clearTimeout(first);
+      if (timer.current) clearInterval(timer.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wait?.wait_id]);
 

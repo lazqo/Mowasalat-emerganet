@@ -30,6 +30,22 @@ export default function DriverRoutes() {
       }
       setSession(s);
       try {
+        // Resume an active trip (state survives app restarts; it lives in Redis with a TTL).
+        try {
+          const t = await api.currentTrip(s.session_token);
+          router.replace({
+            pathname: "/driver/trip",
+            params: { trip_id: t.trip_id, route_id: t.route_id, direction: String(t.direction) },
+          });
+          return;
+        } catch (e: any) {
+          if (e?.status === 401) {
+            await store.clearDriverSession();
+            router.replace("/driver/login");
+            return;
+          }
+          // 404 = no active trip; anything else falls through to the route list
+        }
         const r = await api.listRoutes();
         setRoutes(r.filter((x) => s.assigned_route_ids.includes(x.id)));
       } catch (e: any) {
@@ -64,6 +80,11 @@ export default function DriverRoutes() {
   };
 
   const logout = async () => {
+    if (session) {
+      try {
+        await api.logout(session.session_token); // revoke server-side
+      } catch {}
+    }
     await store.clearDriverSession();
     router.replace("/");
   };

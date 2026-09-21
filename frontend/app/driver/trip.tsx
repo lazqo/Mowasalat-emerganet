@@ -60,14 +60,30 @@ export default function DriverTrip() {
       setWaiting(w);
       setErr(null);
     } catch (e: any) {
+      if (e?.status === 401) {
+        await store.clearDriverSession();
+        router.replace("/driver/login");
+        return;
+      }
+      if (e?.status === 404) {
+        // Trip expired on the server (stale for too long) - back to line selection.
+        router.replace("/driver/routes");
+        return;
+      }
       setErr(e.message || "خطأ");
     }
   };
   useEffect(() => {
     if (!session) return;
-    poll();
-    timer.current = setInterval(poll, POLL_MS);
-    return () => timer.current && clearInterval(timer.current);
+    const tick = () => {
+      void poll();
+    };
+    const first = setTimeout(tick, 0);
+    timer.current = setInterval(tick, POLL_MS);
+    return () => {
+      clearTimeout(first);
+      if (timer.current) clearInterval(timer.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 

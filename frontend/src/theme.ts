@@ -1,4 +1,4 @@
-// Design tokens for Mowasalat. Filled from /app/design_guidelines.json.
+// Design tokens for Wenak. Filled from /design_guidelines.json.
 // Earthy Levantine palette. Light theme only for MVP.
 
 import { useMemo } from "react";
@@ -60,7 +60,7 @@ setColorScheme?.(themes.dark ? null : defaultScheme);
 
 export function useTheme(): { scheme: ColorScheme; colors: ThemeColors } {
   const system = useColorScheme();
-  const scheme: ColorScheme = system && themes[system] ? system : defaultScheme;
+  const scheme: ColorScheme = system === "dark" && themes.dark ? "dark" : defaultScheme;
   return { scheme, colors: themes[scheme] ?? themes.light };
 }
 

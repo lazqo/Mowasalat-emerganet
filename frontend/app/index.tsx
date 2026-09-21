@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { makeStyles, spacing, radius, fontSize } from "@/src/theme";
@@ -23,7 +23,7 @@ export default function Index() {
       />
       <View style={[styles.content, { paddingTop: insets.top + spacing.xl, paddingBottom: insets.bottom + spacing.xl }]}>
         <View style={styles.top}>
-          <Text style={styles.brand}>مواصلات</Text>
+          <Text style={styles.brand}>وينك</Text>
           <Text style={styles.tagline}>خطوطك المعتادة، معلومات حقيقية</Text>
         </View>
         <View style={styles.buttons}>
@@ -51,8 +51,8 @@ export default function Index() {
 
 const useStyles = makeStyles((colors) => ({
   container: { flex: 1, backgroundColor: colors.surfaceInverse },
-  hero: { ...(require("react-native").StyleSheet.absoluteFillObject) },
-  scrim: { ...(require("react-native").StyleSheet.absoluteFillObject) },
+  hero: { ...StyleSheet.absoluteFill },
+  scrim: { ...StyleSheet.absoluteFill },
   content: { flex: 1, paddingHorizontal: spacing.xl, justifyContent: "space-between" },
   top: { alignItems: "flex-start", gap: spacing.sm, marginTop: spacing.xxxl },
   brand: { color: colors.onSurfaceInverse, fontSize: 48, fontWeight: "500", letterSpacing: -0.5 },

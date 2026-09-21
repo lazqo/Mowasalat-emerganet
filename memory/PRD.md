@@ -1,4 +1,4 @@
-# Mowasalat / مواصلات - PRD
+# Wenak / وينك - PRD
 
 ## Product
 A live information & demand-visibility layer for existing shared/public
@@ -8,7 +8,7 @@ service - no booking, no fare, no dispatch, no chat.
 ## Roles (single app)
 - **Passenger** (no account): pick destination → see approaching buses & ETA →
   "أنا مستني هون" → live bus card → "ركبت" / "إلغاء".
-- **Driver** (phone + mock OTP): pick route + direction → "ابدأ" → active-trip
+- **Driver** (phone + SMS OTP): pick route + direction → "ابدأ" → active-trip
   screen with "N ركاب بانتظارك" + distance buckets → progress simulator
   (`+0.5 km`) → "خلصت".
 
@@ -23,16 +23,19 @@ service - no booking, no fare, no dispatch, no chat.
 ## Backend (FastAPI + MongoDB)
 Endpoints (all prefixed `/api`):
 - `GET /destinations`, `GET /routes`
-- `POST /driver/otp/request`, `POST /driver/otp/verify`
-- `POST /driver/trip/start|progress|end`, `GET /driver/trip/{id}/waiting`
+- `GET /routes/{id}/corridor` (polyline + stops for on-phone projection)
+- `POST /driver/otp/request`, `POST /driver/otp/verify`, `POST /driver/logout`, `GET /driver/me`
+- `POST /driver/trip/start|progress|end`, `GET /driver/trip/current`, `GET /driver/trip/{id}/waiting` (Bearer session)
 - `GET /passenger/buses`, `POST /passenger/wait`,
   `GET /passenger/wait/{id}/status`, `POST /passenger/wait/{id}/board|cancel`
 - `GET /admin/state` (aggregate counts only)
 
 ## Privacy architecture (enforced)
 - **No raw GPS stored.** Backend receives route-relative progress (km) only.
-- **No trajectory database.** Realtime state (trips, waits, sessions) lives
-  in an in-memory dict with TTLs (mimics Redis). Nothing is logged.
+- **No trajectory database.** Realtime state (trips, waits, sessions, OTP
+  challenges) lives in Redis with TTLs. It may survive an API restart but
+  expires on its own and never becomes historical trip data. Mongo holds
+  configuration/account data only.
 - **No passenger accounts.** Buses use temporary pseudonyms (`bus-xxxxxx`).
 - **Waits auto-expire** after 20 minutes.
 - **Aggregate analytics only** (`demand_stats` collection: destination + hour +
@@ -43,11 +46,12 @@ Mongo (durable, minimal):
 - `drivers` — id, phone, assigned_route_ids, verification_tier
 - `demand_stats` — destination_id, hour, requests
 
-In-memory (TTL, no persistence):
-- ACTIVE_TRIPS, WAITING_REQUESTS, DRIVER_SESSIONS
+Redis (TTL, no history):
+- trip:*, wait:*, session:*, otp:*, rl:*
 
-Seed data: 5 pilot routes (Irbid ↔ Malka, Sama Al-Rousan, Kufr Soum, Habras,
-Umm Qais) with served intermediate destinations and corridor km.
+Route data: 5 pilot lines (Irbid ↔ Malka, Sama Al-Rousan, Kufr Soum, Habras,
+Umm Qais) from `backend/data/corridors/*.geojson`, provisional OSM traces
+to be field-checked.
 
 ## Excluded from MVP (by product spec)
 Payments, wallet, bookings, seats, chat, calls, ratings, driver commission,
@@ -59,7 +63,8 @@ passenger accounts, driver bidding, fare negotiation.
   progress on-device.
 - **Map.** Corridor is shown as a progress bar. `react-native-maps` with OSM
   tiles can be layered on later.
-- **Real SMS OTP.** Mock accepts any 6-digit code. Wire Twilio later.
+- **Real SMS OTP.** OTP codes are real (hashed, expiring, one-use, attempt
+  limited) but delivery is a mock provider until Twilio is wired (Phase 3).
 
 ## Business enhancement (future revenue)
 Context-based, non-behavioural advertising ("target the journey, not the

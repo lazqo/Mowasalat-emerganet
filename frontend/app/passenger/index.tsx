@@ -46,7 +46,10 @@ export default function PassengerHome() {
     }
   };
   useEffect(() => {
-    load();
+    const first = setTimeout(() => {
+      void load();
+    }, 0);
+    return () => clearTimeout(first);
   }, []);
 
   // Passenger phone determines the "route + direction" that can serve the
@@ -60,7 +63,7 @@ export default function PassengerHome() {
     let match: { route_id: string; direction: number } | null = null;
     for (const r of routes) {
       for (const d of r.directions) {
-        const served = d.served.find((s) => s.destination_id === dest.id);
+        const served = d.served.find((s) => s.stop_id === dest.id && s.progress_km > 0);
         if (served && d.origin_id === "irbid") {
           match = { route_id: r.id, direction: d.direction };
           break;

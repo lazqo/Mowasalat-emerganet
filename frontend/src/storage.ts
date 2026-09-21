@@ -2,8 +2,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DriverSession } from "./api";
 
-const KEY_SESSION = "mow.driver.session";
-const KEY_RECENT = "mow.passenger.recent";
+const KEY_SESSION = "wenak.driver.session";
+const KEY_RECENT = "wenak.passenger.recent";
 
 export const store = {
   async saveDriverSession(s: DriverSession) {

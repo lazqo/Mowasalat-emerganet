@@ -1,7 +1,7 @@
 {
-  "name": "frontend",
+  "name": "wenak",
   "main": "expo-router/entry",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "scripts": {
     "preinstall": "./scripts/cmd-guard.js --preinstall",
     "start": "expo start",
@@ -9,7 +9,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@expo/metro-runtime": "57.0.15",
@@ -26,6 +27,7 @@
     "expo-image": "57.0.4",
     "expo-linear-gradient": "57.0.1",
     "expo-linking": "57.0.9",
+    "expo-location": "57.0.19",
     "expo-router": "57.0.20",
     "expo-secure-store": "57.0.3",
     "expo-splash-screen": "57.0.8",
